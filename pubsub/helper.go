@@ -2,10 +2,13 @@ package pubsub
 
 import (
 	"context"
+	"encoding/json"
 
 	"cloud.google.com/go/pubsub"
+	"github.com/americanas-go/errors"
 	"github.com/americanas-go/faas/cloudevents"
 	"github.com/americanas-go/log"
+	"github.com/cloudevents/sdk-go/v2/event"
 )
 
 // Helper assists in creating event handlers.
@@ -50,10 +53,41 @@ func (h *Helper) run(ctx context.Context, subscriptionName string) {
 	logger := log.FromContext(ctx)
 	sub := h.client.Subscription(subscriptionName)
 	err := sub.Receive(context.Background(), func(ctx context.Context, m *pubsub.Message) {
-		log.Printf("Got message: %s", m.Data)
+		go func(ctx context.Context, m pubsub.Message) {
+			h.handle(ctx, m)
+		}(ctx, *m)
 		m.Ack()
 	})
 	if err != nil {
 		logger.Errorf("pubsub read error: %w", err)
 	}
+}
+
+func (h *Helper) handle(ctx context.Context, msg pubsub.Message) {
+
+	logger := log.FromContext(ctx).WithTypeOf(*h)
+
+	in := event.New()
+	if err := json.Unmarshal(msg.Data, &in); err != nil {
+		var data interface{}
+		if err := json.Unmarshal(msg.Data, &data); err != nil {
+			logger.Errorf("could not decode pubsub record. %s", err.Error())
+			return
+		}
+
+		err := in.SetData("", data)
+		if err != nil {
+			logger.Errorf("could set data from pubsub record. %s", err.Error())
+			return
+		}
+	}
+
+	var inouts []*cloudevents.InOut
+
+	inouts = append(inouts, &cloudevents.InOut{In: &in})
+
+	if err := h.handler.Process(ctx, inouts); err != nil {
+		logger.Error(errors.ErrorStack(err))
+	}
+
 }
