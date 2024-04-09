@@ -1,8 +1,9 @@
 package pubsub
 
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
+
+	"cloud.google.com/go/pubsub"
 	"github.com/americanas-go/errors"
 	"github.com/americanas-go/log"
 	v2 "github.com/cloudevents/sdk-go/v2"
@@ -25,7 +26,7 @@ func (p *Client) Publish(ctx context.Context, events []*v2.Event) error {
 
 	logger := log.FromContext(ctx).WithTypeOf(*p)
 
-	logger.Info("publishing to awssns")
+	logger.Info("publishing to pubsub")
 
 	if len(events) > 0 {
 
@@ -72,6 +73,7 @@ func (p *Client) send(parentCtx context.Context, events []*v2.Event) (err error)
 			err = try.Do(func(attempt int) (bool, error) {
 				r := topic.Publish(gctx, message)
 				if _, err := r.Get(gctx); err != nil {
+					log.Error(err)
 					return attempt < 5, errors.NewInternal(err, "could not be published in gcp pubsub")
 				}
 				return false, nil
