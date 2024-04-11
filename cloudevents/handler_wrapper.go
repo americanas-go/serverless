@@ -44,15 +44,16 @@ func (h *HandlerWrapper) closeAll(parentCtx context.Context) error {
 	logger := log.FromContext(parentCtx).WithTypeOf(*h)
 
 	for _, middleware := range h.middlewares {
+		if middleware != nil {
+			logger.Tracef("executing event middleware %s.Close()", reflect.TypeOf(middleware).String())
 
-		logger.Tracef("executing event middleware %s.Close()", reflect.TypeOf(middleware).String())
-
-		var err error
-		err = middleware.Close(parentCtx)
-		if err != nil {
-			err = errors.Wrap(err, errors.Internalf("an error happened when calling Close() method in %s middleware",
-				reflect.TypeOf(middleware).String()))
-			return err
+			var err error
+			err = middleware.Close(parentCtx)
+			if err != nil {
+				err = errors.Wrap(err, errors.Internalf("an error happened when calling Close() method in %s middleware",
+					reflect.TypeOf(middleware).String()))
+				return err
+			}
 		}
 	}
 
@@ -64,16 +65,17 @@ func (h *HandlerWrapper) afterAll(parentCtx context.Context, inouts []*InOut) er
 	logger := log.FromContext(parentCtx).WithTypeOf(*h)
 
 	for _, middleware := range h.middlewares {
+		if middleware != nil {
+			logger.Tracef("executing event middleware %s.AfterAll()", reflect.TypeOf(middleware).String())
 
-		logger.Tracef("executing event middleware %s.AfterAll()", reflect.TypeOf(middleware).String())
-
-		var err error
-		parentCtx, err = middleware.AfterAll(parentCtx, inouts)
-		if err != nil {
-			err = errors.Wrap(err,
-				errors.Internalf("an error happened when calling AfterAll() method in %s middleware",
-					reflect.TypeOf(middleware).String()))
-			return err
+			var err error
+			parentCtx, err = middleware.AfterAll(parentCtx, inouts)
+			if err != nil {
+				err = errors.Wrap(err,
+					errors.Internalf("an error happened when calling AfterAll() method in %s middleware",
+						reflect.TypeOf(middleware).String()))
+				return err
+			}
 		}
 	}
 
@@ -85,16 +87,17 @@ func (h *HandlerWrapper) beforeAll(parentCtx context.Context, inouts []*InOut) (
 	logger := log.FromContext(parentCtx).WithTypeOf(*h)
 
 	for _, middleware := range h.middlewares {
+		if middleware != nil {
+			logger.Tracef("executing event middleware %s.BeforeAll()", reflect.TypeOf(middleware).String())
 
-		logger.Tracef("executing event middleware %s.BeforeAll()", reflect.TypeOf(middleware).String())
-
-		var err error
-		parentCtx, err = middleware.BeforeAll(parentCtx, inouts)
-		if err != nil {
-			err = errors.Wrap(err,
-				errors.Internalf("an error happened when calling BeforeAll() method in %s middleware",
-					reflect.TypeOf(middleware).String()))
-			return parentCtx, err
+			var err error
+			parentCtx, err = middleware.BeforeAll(parentCtx, inouts)
+			if err != nil {
+				err = errors.Wrap(err,
+					errors.Internalf("an error happened when calling BeforeAll() method in %s middleware",
+						reflect.TypeOf(middleware).String()))
+				return parentCtx, err
+			}
 		}
 	}
 
@@ -194,14 +197,15 @@ func (h *HandlerWrapper) before(ctx context.Context, middlewares []Middleware, i
 	var err error
 
 	for _, middleware := range middlewares {
+		if middleware != nil {
+			logger.Tracef("executing event middleware %s.Before()", reflect.TypeOf(middleware).String())
 
-		logger.Tracef("executing event middleware %s.Before()", reflect.TypeOf(middleware).String())
-
-		ctx, err = middleware.Before(ctx, in)
-		if err != nil {
-			return ctx, errors.Wrap(err,
-				errors.Internalf("an error happened when calling Before() method in %s middleware",
-					reflect.TypeOf(middleware).String()))
+			ctx, err = middleware.Before(ctx, in)
+			if err != nil {
+				return ctx, errors.Wrap(err,
+					errors.Internalf("an error happened when calling Before() method in %s middleware",
+						reflect.TypeOf(middleware).String()))
+			}
 		}
 	}
 
@@ -216,14 +220,15 @@ func (h *HandlerWrapper) after(ctx context.Context, middlewares []Middleware, in
 	var er error
 
 	for _, middleware := range middlewares {
+		if middleware != nil {
+			logger.Tracef("executing event middleware %s.After()", reflect.TypeOf(middleware).String())
 
-		logger.Tracef("executing event middleware %s.After()", reflect.TypeOf(middleware).String())
-
-		ctx, er = middleware.After(ctx, in, out, err)
-		if er != nil {
-			return ctx, errors.Wrap(err,
-				errors.Internalf("an error happened when calling After() method in %s middleware",
-					reflect.TypeOf(middleware).String()))
+			ctx, er = middleware.After(ctx, in, out, err)
+			if er != nil {
+				return ctx, errors.Wrap(err,
+					errors.Internalf("an error happened when calling After() method in %s middleware",
+						reflect.TypeOf(middleware).String()))
+			}
 		}
 	}
 
