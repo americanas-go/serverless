@@ -41,17 +41,21 @@ func NewDefaultHelper(ctx context.Context, client *pubsub.Client, handler *cloud
 }
 
 func (h *Helper) Start() {
-	topic := h.options.Topic
-
-	go h.run(context.Background(), topic)
+	go h.run(context.Background())
 
 	c := make(chan struct{})
 	<-c
 }
 
-func (h *Helper) run(ctx context.Context, subscriptionName string) {
+func (h *Helper) run(ctx context.Context) {
 	logger := log.FromContext(ctx)
-	sub := h.client.Subscription(subscriptionName)
+	subscription := h.options.Subscription
+	sub := h.client.Subscription(subscription)
+
+	sub.ReceiveSettings.Synchronous = h.options.Synchronous
+	sub.ReceiveSettings.NumGoroutines = h.options.Concurrency
+	sub.ReceiveSettings.MaxOutstandingMessages = h.options.MaxOutstandingMessages
+
 	err := sub.Receive(context.Background(), func(ctx context.Context, m *pubsub.Message) {
 		go func(ctx context.Context, m pubsub.Message) {
 			h.handle(ctx, m)

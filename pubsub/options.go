@@ -6,8 +6,10 @@ import (
 
 // Options can be used to create customized handler.
 type Options struct {
-	Topic       string
-	Concurrency int
+	Subscription           string
+	Synchronous            bool
+	Concurrency            int
+	MaxOutstandingMessages int
 }
 
 // DefaultOptions returns options based in config.
