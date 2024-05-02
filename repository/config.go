@@ -10,7 +10,7 @@ const (
 )
 
 func init() {
-	config.Add(eventProvider, "nats", "event provider")
+	config.Add(eventProvider, "noop", "event provider")
 }
 
 // EventProviderValue returns the event provider configured via the "faas.datastore.event.provider" key.
