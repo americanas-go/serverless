@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"github.com/americanas-go/faas/datastore/gcp/pubsub"
+	"github.com/americanas-go/faas/datastore/noop"
 	"sync"
 
 	"github.com/americanas-go/faas/datastore/aws/kinesis"
@@ -36,8 +37,10 @@ func EventModule() fx.Option {
 			options = sqs.Module()
 		case "pubsub":
 			options = pubsub.Module()
-		default:
+		case "nats":
 			options = nats.Module()
+		default:
+			options = noop.Module()
 		}
 
 	})
