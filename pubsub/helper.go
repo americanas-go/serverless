@@ -63,7 +63,7 @@ func (h *Helper) run(ctx context.Context) {
 		m.Ack()
 	})
 	if err != nil {
-		logger.Errorf("pubsub read error: %w", err)
+		logger.Errorf("pubsub read error: %w", err.Error())
 	}
 }
 
